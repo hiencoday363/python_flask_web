@@ -1,0 +1,25 @@
+{% extends 'base_login.html' %}
+{% block form %}
+    <form method="post" action="/login_validate">
+        <div class="mb-3">
+            <input style="font-size: 17px;padding: 14px 16px" name="email" type="email" class="form-control"
+                   id="InputEmail" value="{{ value_email }}"
+                   aria-describedby="emailHelp" placeholder="Email address" autocomplete="current-email">
+        </div>
+        <div class="mb-3">
+            <input style="font-size: 17px;padding: 14px 16px" name="password" type="password"
+                   class="form-control" id="InputPassword"
+                   value="{{ value_pass }}" placeholder="Enter password" autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn text-white"
+                style="background-color:#1877f2;font-size: 22px;font-weight: 500;text-align: center;width: 100%">Log in
+        </button>
+        <div style="border-bottom:1px solid #dadde1;margin:30px auto"></div>
+
+        <div class="mb-3 mt-3">
+            <a class="btn text-white"
+               style="background-color:#42b72a;font-size: 22px;font-weight: 500;text-align: center;width: 100%"
+               href="/signup">Create new account</a>
+        </div>
+    </form>
+{% endblock %}

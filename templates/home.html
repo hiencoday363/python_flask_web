@@ -1,0 +1,135 @@
+{% extends 'based.html' %}
+{% block head %}
+    <title>Home - Hiện Cò</title>
+{% endblock %}
+
+
+{% block body %}
+    <!-- Wrapper -->
+    <div id="wrapper" class="fade-in">
+
+        <!-- Intro -->
+        <div id="intro">
+            <h1>This is<br/>
+                Massively</h1>
+            <p>A free, fully responsive HTML5 + CSS3 site template designed by <a  >@ajlkn</a>
+                for <a >HTML5 UP</a><br/>
+                and released for free under the <a >Creative Commons license</a>.</p>
+            <ul class="actions">
+                <li><a href="#header" class="button icon solid solo fa-arrow-down scrolly">Continue</a></li>
+            </ul>
+        </div>
+
+        <!-- Header -->
+        <header id="header">
+            <a class="logo">Massively</a>
+        </header>
+
+        <!-- Nav -->
+        <nav id="nav">
+            <ul class="links">
+                <li class="active"><a href="/index.html/1">This is Massively</a></li>
+{#                <li><a href="/detail">Generic Page</a></li>#}
+                <li><a href="/logout">Log out</a></li>
+            </ul>
+            <ul class="icons">
+                <li><a  class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+                <li><a  class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
+                <li><a  class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
+                <li><a  class="icon brands fa-github"><span class="label">GitHub</span></a></li>
+            </ul>
+        </nav>
+
+        <!-- Main -->
+        <div id="main">
+
+
+            <!-- Posts -->
+            <section class="posts">
+                {% for record in data[2] %}
+                <article>
+                    <header>
+                        <span class="date">{{ record[3] }}</span>
+                        <h2><a href="/detail/{{ record[0] }}">{{ record[1] }}</a></h2>
+                    </header>
+                    <a href="/detail/{{ record[0] }}" style="object-position: 0 100%" class="image fit"><img src="{{ record[4] }}" alt=""/></a>
+                    <p>{{ record[2] }}</p>
+                    <ul class="actions special">
+                        <li><a href="/detail/{{ record[0] }}" class="button">Full Story</a></li>
+                    </ul>
+                </article>
+                {% endfor %}
+            </section>
+
+            <!-- Footer -->
+            <footer>
+                <div class="pagination">
+                    {% for page in range(1,data[1]) %}
+                        <a {% if page != data[0] %} href="/index.html/{{ page }}" {% endif %}  class="page {% if page == data[0] %} active {% endif %}" >{{ page }}</a>
+                    {% endfor %}
+                </div>
+            </footer>
+
+        </div>
+
+        <!-- Footer -->
+        <footer id="footer">
+            <section>
+                <form method="post" action="/add_post">
+                    <div class="fields">
+                        <div class="field">
+                            <label for="name">Title</label>
+                            <input type="text" name="title" id="name" required/>
+                        </div>
+                        <div class="field">
+                            <label for="email">Links image</label>
+                            <input type="text" name="link" id="email" required/>
+                        </div>
+                        <div class="field">
+                            <label for="message">Content</label>
+                            <textarea name="message" id="message" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <ul class="actions">
+                        <li><input type="submit" value="Add new post"/></li>
+                    </ul>
+                </form>
+            </section>
+            <section class="split contact">
+                <section class="alt">
+                    <h3>Address</h3>
+                    <p>1234 Somewhere Road #87257<br/>
+                        Nashville, TN 00000-0000</p>
+                </section>
+                <section>
+                    <h3>Phone</h3>
+                    <p><a >(000) 000-0000</a></p>
+                </section>
+                <section>
+                    <h3>Email</h3>
+                    <p><a >info@untitled.tld</a></p>
+                </section>
+                <section>
+                    <h3>Social</h3>
+                    <ul class="icons alt">
+                        <li><a   class="icon brands alt fa-twitter"><span class="label">Twitter</span></a></li>
+                        <li><a   class="icon brands alt fa-facebook-f"><span class="label">Facebook</span></a>
+                        </li>
+                        <li><a   class="icon brands alt fa-instagram"><span class="label">Instagram</span></a>
+                        </li>
+                        <li><a   class="icon brands alt fa-github"><span class="label">GitHub</span></a></li>
+                    </ul>
+                </section>
+            </section>
+        </footer>
+
+        <!-- Copyright -->
+        <div id="copyright">
+            <ul>
+                <li>&copy; Untitled</li>
+                <li>Design: <a href="https://html5up.net">HTML5 UP</a></li>
+            </ul>
+        </div>
+
+    </div>
+{% endblock %}
