@@ -31,10 +31,10 @@ except Exception as error:
 # import urllib
 from sqlalchemy import create_engine
 
-server = 'DESKTOP-G2RKN51\\SQLEXPRESS' # to specify an alternate port
+server = 'databasehienco.cidw3wkwqevk.us-east-1.rds.amazonaws.com,1433' # to specify an alternate port
 database = 'flask' 
-username = 'sa' 
-password = 'hien123'
+username = 'hien363' 
+password = 'hien0362363616'
 driver = 'SQL Server'
 
 engine = create_engine(f"mssql://{username}:{password}@{server}/{database}?driver={driver}")
