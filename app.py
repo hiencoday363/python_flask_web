@@ -14,7 +14,7 @@ username = 'hien363'
 password = 'hien0362363616'
 driver = 'SQL Server'
 
-engine = create_engine(f"mssql://{username}:{password}@{server}/{database}?driver={driver}")
+engine = create_engine(f"mssql+pymssql://{username}:{password}@{server}/{database}?driver={driver}")
 
 #connect 
 conn = engine.connect()
