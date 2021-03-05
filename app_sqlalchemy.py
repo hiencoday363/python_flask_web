@@ -1,5 +1,5 @@
 from flask import Flask, render_template, redirect, request, session, url_for
-import pyodbc
+from sqlalchemy import create_engine
 import os, math
 
 app = Flask(__name__)
@@ -7,14 +7,18 @@ app = Flask(__name__)
 # create access token
 app.secret_key = os.urandom(24)
 
-conn = pyodbc.connect(
-    'Driver={SQL Server};'
-    'Server=databasehienco.cidw3wkwqevk.us-east-1.rds.amazonaws.com,1433;'
-    'uid=hien363;'
-    'pwd=hien0362363616;'
-    'Database=flask;'
-    'Trusted_Connection=no;'
-)
+#config database
+server = 'DESKTOP-G2RKN51\\SQLEXPRESS' # to specify an alternate port
+database = 'flask' 
+username = 'sa' 
+password = 'hien123'
+driver = 'SQL Server'
+
+engine = create_engine(f"mssql://{username}:{password}@{server}/{database}?driver={driver}")
+
+#connect 
+conn = engine.connect()
+
 print('connect')
 
 
@@ -27,22 +31,24 @@ class handle_error():
 
 @app.route('/index.html/<int:current_page>')
 def hello_world(current_page):
-    if 'user_id' in session:
+    if 'user_id' in session and 'user_email' in session:
         limit = 4
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM article")
+        cursor1 = conn.execute("SELECT * FROM article")
 
-        total_page = math.ceil(len(cursor.fetchall()) / limit) + 1
+        total_page = math.ceil(len(cursor1.fetchall()) / limit) + 1
 
-        cursor.execute("SELECT * FROM article ORDER BY ngaydang DESC OFFSET (? - 1)*?  ROWS FETCH FIRST ? ROWS ONLY;",
+        cursor2 = conn.execute("SELECT * FROM article ORDER BY ngaydang DESC OFFSET (? - 1)*?  ROWS FETCH FIRST ? ROWS ONLY;",
                        current_page, limit, limit)
-        rows = cursor.fetchall()
+
+        rows = cursor2.fetchall()
 
         data = [current_page, total_page, rows]
-        # cursor.execute("SELECT * FROM ")
 
-        return render_template('home.html', data=data)
-        # return f'{data[2]}'
+        cursor3 = conn.execute("SELECT * FROM login_dk WHERE email LIKE ?", session['user_email'])
+        user_email = cursor3.fetchall()
+        print('day la user_email {}'.format(user_email[0][1]))
+
+        return render_template('home.html', data=data, account=user_email[0][1])
     else:
         return redirect('/')
 
@@ -50,8 +56,8 @@ def hello_world(current_page):
 @app.route('/detail/<int:id_page>')
 def detail(id_page):
     if 'user_id' in session:
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM article WHERE ID = ?', id_page)
+        cursor = conn.execute('SELECT * FROM article WHERE ID = ?', id_page)
+
         row = cursor.fetchone()
         return render_template('detail.html', data=row)
     else:
@@ -65,15 +71,10 @@ def edit(id_page):
     message = request.form.get('message')
 
     if 'user_id' in session:
-        cursor = conn.cursor()
-        cursor.execute('UPDATE article SET title = ?, content = ?, img = ?  WHERE ID = ?', title, message, link,
+        conn.execute('UPDATE article SET title = ?, content = ?, img = ?  WHERE ID = ?', title, message, link,
                        id_page)
-        cursor.commit()
-
-        row = [id_page, title, message, '', link]
 
         return redirect(f'/detail/{id_page}')
-        # return render_template('detail.html', data=row)
     else:
         return redirect('/')
 
@@ -82,9 +83,7 @@ def edit(id_page):
 def delete(id_post):
     if 'user_id' in session:
         if id_post != 1:
-            cursor = conn.cursor()
-            cursor.execute('DELETE FROM article WHERE ID = ?', id_post)
-            cursor.commit()
+            conn.execute('DELETE FROM article WHERE ID = ?', id_post)
         return redirect('/index.html/1')
     else:
         return redirect('/')
@@ -99,9 +98,7 @@ def add_post():
     if title == '' or link == '' or message == '':
         return redirect('/index.html/1')
     else:
-        cursor = conn.cursor()
-        cursor.execute('INSERT INTO article(title,content,img) VALUES(?,?,?)', title, message, link)
-        cursor.commit()
+        conn.execute('INSERT INTO article(title,content,img) VALUES(?,?,?)', title, message, link)
         return redirect('/index.html/1')
 
 # authenticate
@@ -129,16 +126,15 @@ def login_validate():
     if email == '' or password == '':
         return render_template('login.html', str_error='Please, fill in field')
     else:
-        cursor = conn.cursor()
         # b2: check request
-        cursor.execute("SELECT * FROM login_dk WHERE email LIKE ?", email)
+        cursor = conn.execute("SELECT * FROM login_dk WHERE email LIKE ?", email)
         rows_email = cursor.fetchall()
         if len(rows_email) <= 0:
             handle_error.type_email = 'Email have not active, try again !'
             return render_template('login.html', str_error=handle_error.type_email, value_email=email,
                                    value_pass=password)
         else:
-            cursor.execute("SELECT * FROM login_dk WHERE mk LIKE ?", password)
+            cursor = conn.execute("SELECT * FROM login_dk WHERE mk LIKE ?", password)
             rows_pass = cursor.fetchall()
             if len(rows_pass) <= 0:
                 handle_error.type_pass = 'Password incorrect, please check it !'
@@ -146,6 +142,7 @@ def login_validate():
                                        value_pass=password)
             else:
                 session['user_id'] = rows_pass[0][0]
+                session['user_email'] = email
                 return redirect('/index.html/1')
 
 
@@ -170,26 +167,26 @@ def signup_validate():
             return render_template('signup.html', str_error=handle_error.type_pass, value_name=username,
                                    value_email=email, value_pass=password)
         else:
-            cursor = conn.cursor()
-            rows_user = cursor.execute("SELECT * FROM login_dk WHERE username = ?", username)
-            if len(list(rows_user)) > 0:
+            rows_user = conn.execute("SELECT * FROM login_dk WHERE username = ?", username)
+            if len(rows_user.fetchall()) > 0:
                 handle_error.type_username = 'Name is not available !'
                 return render_template('signup.html', str_error=handle_error.type_username, value_name=username,
                                        value_email=email, value_pass=password)
             else:
-                rows_email = cursor.execute("SELECT * FROM login_dk WHERE email = ?", email)
-                if len(list(rows_email)) > 0:
+                rows_email = conn.execute("SELECT * FROM login_dk WHERE email = ?", email)
+                if len(rows_email.fetchall()) > 0:
                     handle_error.type_email = 'Email is not available !'
                     return render_template('signup.html', str_error=handle_error.type_email, value_name=username,
                                            value_email=email, value_pass=password)
                 else:
-                    cursor.execute("INSERT INTO login_dk(username, email, mk) VALUES (?,?,?)", username, email,
+                    new_user = conn.execute("INSERT INTO login_dk(username, email, mk) VALUES (?,?,?)", username, email,
                                    password)
-                    cursor.commit()
-                    cursor.execute("SELECT * FROM login_dk WHERE email = ? AND mk = ?", email, password)
-                    _user = cursor.fetchall()
+
+                    row_user = conn.execute("SELECT * FROM login_dk WHERE email = ? AND mk = ?", email, password)
+                    _user = row_user.fetchall()
                     if len(_user) > 0:
                         session['user_id'] = _user[0][0]
+                        session['user_email'] = email
                         return redirect('/index.html/1')
                     else:
                         return render_template('signup.html', str_error='Some thing went wrong, please sign in later !')
