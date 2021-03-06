@@ -1,22 +1,24 @@
 import pyodbc
 
+try:
+	conn = pyodbc.connect(
+	    'Driver={SQL Server};'
+	    'Server=DESKTOP-G2RKN51\\SQLEXPRESS;'
+	    'Username=sa;'
+	    'Password=hien123;'
+	    'Database=flask;'
+	    'Trusted_Connection=true;'
+	)
+	print('connect')
 
-conn = pyodbc.connect(
-    'Driver={SQL Server};'
-    'Server=DESKTOP-G2RKN51\\SQLEXPRESS;'
-    'Username=sa;'
-    'Password=hien123;'
-    'Database=flask;'
-    'Trusted_Connection=true;'
-)
-print('connect')
+	cursor = conn.cursor()
+	cursor.execute("SELECT * FROM article")
 
+	rows = cursor.fetchall()
 
-cursor = conn.cursor()
-cursor.execute("SELECT * FROM article")
-
-rows = cursor.fetchall()
-
-for i, row in enumerate(rows):
-	if i == 0:
-		print(row[0])
+	for i, row in enumerate(rows):
+		if i == 0:
+			print(row[0])
+			
+except:
+	print('chua ket noi')

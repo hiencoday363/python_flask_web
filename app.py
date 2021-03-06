@@ -7,14 +7,26 @@ app = Flask(__name__)
 # create access token
 app.secret_key = os.urandom(24)
 
-#config database
+#config database sql server
+'''
 server = 'databasehienco.cidw3wkwqevk.us-east-1.rds.amazonaws.com,1433' # to specify an alternate port
 database = 'flask' 
 username = 'hien363' 
 password = 'hien0362363616'
 driver = 'SQL Server'
-
 engine = create_engine(f"mssql+pymssql://{username}:{password}@{server}/{database}?driver={driver}")
+'''
+
+# postgresql
+server = 'database-postgres-1.cidw3wkwqevk.us-east-1.rds.amazonaws.com' # to specify an alternate port
+database = 'flask' 
+username = 'sa' 
+password = 'hien0362363616'
+port = 5432
+
+engine = create_engine(f'postgresql://{username}:{password}@{server}:{port}/{database}')
+
+
 
 #connect 
 conn = engine.connect()
@@ -37,14 +49,13 @@ def hello_world(current_page):
 
         total_page = math.ceil(len(cursor1.fetchall()) / limit) + 1
 
-        cursor2 = conn.execute("SELECT * FROM article ORDER BY ngaydang DESC OFFSET (? - 1)*?  ROWS FETCH FIRST ? ROWS ONLY;",
-                       current_page, limit, limit)
+        cursor2 = conn.execute(f"SELECT * FROM article ORDER BY ngaydang DESC OFFSET ('{current_page}' - 1)*'{limit}' FETCH FIRST '{limit}' ROWS ONLY;")
 
         rows = cursor2.fetchall()
 
         data = [current_page, total_page, rows]
 
-        cursor3 = conn.execute("SELECT * FROM login_dk WHERE email LIKE ?", session['user_email'])
+        cursor3 = conn.execute(f"SELECT * FROM login_dk WHERE email LIKE '{session['user_email']}'")
         user_email = cursor3.fetchall()
 
         return render_template('home.html', data=data, account=user_email[0][1])
@@ -55,7 +66,7 @@ def hello_world(current_page):
 @app.route('/detail/<int:id_page>')
 def detail(id_page):
     if 'user_id' in session:
-        cursor = conn.execute('SELECT * FROM article WHERE ID = ?', id_page)
+        cursor = conn.execute(f"SELECT * FROM article WHERE ID = '{id_page}'")
 
         row = cursor.fetchone()
         return render_template('detail.html', data=row)
@@ -70,8 +81,8 @@ def edit(id_page):
     message = request.form.get('message')
 
     if 'user_id' in session:
-        conn.execute('UPDATE article SET title = ?, content = ?, img = ?  WHERE ID = ?', title, message, link,
-                       id_page)
+        conn.execute("UPDATE article SET title = '{}', content = '{}', img = '{}'  WHERE ID = '{}'".format( title, message, link,
+                       id_page))
 
         return redirect(f'/detail/{id_page}')
     else:
@@ -82,7 +93,7 @@ def edit(id_page):
 def delete(id_post):
     if 'user_id' in session:
         if id_post != 1:
-            conn.execute('DELETE FROM article WHERE ID = ?', id_post)
+            conn.execute("DELETE FROM article WHERE ID = '{}'".format(id_post))
         return redirect('/index.html/1')
     else:
         return redirect('/')
@@ -97,7 +108,7 @@ def add_post():
     if title == '' or link == '' or message == '':
         return redirect('/index.html/1')
     else:
-        conn.execute('INSERT INTO article(title,content,img) VALUES(?,?,?)', title, message, link)
+        conn.execute("INSERT INTO article(title,content,img) VALUES('{}','{}','{}')".format(title, message, link))
         return redirect('/index.html/1')
 
 # authenticate
@@ -126,14 +137,14 @@ def login_validate():
         return render_template('login.html', str_error='Please, fill in field')
     else:
         # b2: check request
-        cursor = conn.execute("SELECT * FROM login_dk WHERE email LIKE ?", email)
+        cursor = conn.execute(f"SELECT * FROM login_dk WHERE email LIKE '{email}'")
         rows_email = cursor.fetchall()
         if len(rows_email) <= 0:
             handle_error.type_email = 'Email have not active, try again !'
             return render_template('login.html', str_error=handle_error.type_email, value_email=email,
                                    value_pass=password)
         else:
-            cursor = conn.execute("SELECT * FROM login_dk WHERE mk LIKE ?", password)
+            cursor = conn.execute(f"SELECT * FROM login_dk WHERE mk LIKE '{password}'")
             rows_pass = cursor.fetchall()
             if len(rows_pass) <= 0:
                 handle_error.type_pass = 'Password incorrect, please check it !'
@@ -166,22 +177,21 @@ def signup_validate():
             return render_template('signup.html', str_error=handle_error.type_pass, value_name=username,
                                    value_email=email, value_pass=password)
         else:
-            rows_user = conn.execute("SELECT * FROM login_dk WHERE username = ?", username)
+            rows_user = conn.execute(f"SELECT * FROM login_dk WHERE username = '{username}'")
             if len(rows_user.fetchall()) > 0:
                 handle_error.type_username = 'Name is not available !'
                 return render_template('signup.html', str_error=handle_error.type_username, value_name=username,
                                        value_email=email, value_pass=password)
             else:
-                rows_email = conn.execute("SELECT * FROM login_dk WHERE email = ?", email)
+                rows_email = conn.execute(f"SELECT * FROM login_dk WHERE email = '{email}'")
                 if len(rows_email.fetchall()) > 0:
                     handle_error.type_email = 'Email is not available !'
                     return render_template('signup.html', str_error=handle_error.type_email, value_name=username,
                                            value_email=email, value_pass=password)
                 else:
-                    new_user = conn.execute("INSERT INTO login_dk(username, email, mk) VALUES (?,?,?)", username, email,
-                                   password)
+                    new_user = conn.execute(f"INSERT INTO login_dk(username, email, mk) VALUES ('{username}','{email}','{password}')")
 
-                    row_user = conn.execute("SELECT * FROM login_dk WHERE email = ? AND mk = ?", email, password)
+                    row_user = conn.execute(f"SELECT * FROM login_dk WHERE email = '{email}' AND mk = '{password}'")
                     _user = row_user.fetchall()
                     if len(_user) > 0:
                         session['user_id'] = _user[0][0]
