@@ -7,21 +7,11 @@ app = Flask(__name__)
 # create access token
 app.secret_key = os.urandom(24)
 
-#config database sql server
-'''
-server = 'databasehienco.cidw3wkwqevk.us-east-1.rds.amazonaws.com,1433' # to specify an alternate port
+# postgresql localhost
+server = 'localhost' # to specify an alternate port
 database = 'flask' 
-username = 'hien363' 
-password = 'hien0362363616'
-driver = 'SQL Server'
-engine = create_engine(f"mssql+pymssql://{username}:{password}@{server}/{database}?driver={driver}")
-'''
-
-# postgresql
-server = 'database-postgres-1.cidw3wkwqevk.us-east-1.rds.amazonaws.com' # to specify an alternate port
-database = 'flask' 
-username = 'sa' 
-password = 'hien0362363616'
+username = 'postgres' 
+password = ''
 port = 5432
 
 engine = create_engine(f'postgresql://{username}:{password}@{server}:{port}/{database}')

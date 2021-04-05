@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 # create access token
 app.secret_key = os.urandom(24)
-
+'''
 conn = pyodbc.connect(
     'Driver={SQL Server};'
     'Server=databasehienco.cidw3wkwqevk.us-east-1.rds.amazonaws.com,1433;'
@@ -16,7 +16,16 @@ conn = pyodbc.connect(
     'Trusted_Connection=no;'
 )
 print('connect')
-
+'''
+conn = pyodbc.connect(
+        'Driver={SQL Server};'
+        'Server=DESKTOP-G2RKN51\\SQLEXPRESS;'
+        'Username=sa;'
+        'Password=hien123;'
+        'Database=flask;'
+        'Trusted_Connection=true;'
+    )
+print('connect')
 
 # class error
 class handle_error():
